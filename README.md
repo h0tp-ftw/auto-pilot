@@ -1,10 +1,16 @@
 # Auto Pilot
 
+[![Version](https://img.shields.io/open-vsx/v/h0tp-ftw/auto-pilot)](https://open-vsx.org/extension/h0tp-ftw/auto-pilot)
+[![Installs](https://img.shields.io/open-vsx/dt/h0tp-ftw/auto-pilot)](https://open-vsx.org/extension/h0tp-ftw/auto-pilot)
+[![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)](https://github.com/h0tp-ftw/auto-pilot)
+
+
 ## Run 3 AI agents in parallel. Zero babysitting.
 
 Stop watching tabs. Auto Pilot keeps every Antigravity conversation moving — accepting file edits, terminal commands, and recovery prompts automatically.
 
-> **Community fork** — all features unlocked, no paywalls, no subscriptions.
+> **Community fork** — all features unlocked, no paywalls, no subscriptions. **[Install from Open VSX](https://open-vsx.org/extension/h0tp-ftw/auto-pilot)**
+
 
 ---
 
@@ -72,3 +78,13 @@ The extension runs silently. Check the status bar for `Auto Pilot: ON`.
 ## License
 
 MIT
+
+---
+
+## Support the Project
+
+If you find **Auto Pilot** helpful, please **star the repository** and share it with your friends! It helps more developers discover the tool.
+
+[![Star on GitHub](https://img.shields.io/github/stars/h0tp-ftw/auto-pilot?style=social)](https://github.com/h0tp-ftw/auto-pilot)
+
+**[Give it a ⭐ on GitHub](https://github.com/h0tp-ftw/auto-pilot)**
