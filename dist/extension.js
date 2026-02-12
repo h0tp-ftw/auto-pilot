@@ -3,24 +3,10 @@ var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 
-// config.js
-var require_config = __commonJS({
-  "config.js"(exports2, module2) {
-    module2.exports = {
-      STRIPE_LINKS: {
-        MONTHLY: "https://buy.stripe.com/7sY00j3eN0Pt9f94549MY0v",
-        YEARLY: "https://buy.stripe.com/3cI3cv5mVaq3crlfNM9MY0u"
-      }
-    };
-  }
-});
-
 // settings-panel.js
 var require_settings_panel = __commonJS({
   "settings-panel.js"(exports2, module2) {
     var vscode2 = require("vscode");
-    var { STRIPE_LINKS } = require_config();
-    var LICENSE_API2 = "https://auto-accept-backend.onrender.com/api";
     var SettingsPanel2 = class _SettingsPanel {
       static currentPanel = void 0;
       static viewType = "autoAcceptSettings";
@@ -33,7 +19,7 @@ var require_settings_panel = __commonJS({
         }
         const panel = vscode2.window.createWebviewPanel(
           _SettingsPanel.viewType,
-          mode === "prompt" ? "Auto Accept Agent" : "Auto Accept Settings",
+          mode === "prompt" ? "Auto Pilot Agent" : "Auto Pilot Settings",
           column || vscode2.ViewColumn.One,
           {
             enableScripts: true,
@@ -58,10 +44,8 @@ var require_settings_panel = __commonJS({
           async (message) => {
             switch (message.command) {
               case "setFrequency":
-                if (this.isPro()) {
-                  await this.context.globalState.update("auto-accept-frequency", message.value);
-                  vscode2.commands.executeCommand("auto-accept.updateFrequency", message.value);
-                }
+                await this.context.globalState.update("auto-accept-frequency", message.value);
+                vscode2.commands.executeCommand("auto-accept.updateFrequency", message.value);
                 break;
               case "getStats":
                 this.sendStats();
@@ -70,10 +54,8 @@ var require_settings_panel = __commonJS({
                 this.sendROIStats();
                 break;
               case "updateBannedCommands":
-                if (this.isPro()) {
-                  await this.context.globalState.update("auto-accept-banned-commands", message.commands);
-                  vscode2.commands.executeCommand("auto-accept.updateBannedCommands", message.commands);
-                }
+                await this.context.globalState.update("auto-accept-banned-commands", message.commands);
+                vscode2.commands.executeCommand("auto-accept.updateBannedCommands", message.commands);
                 break;
               case "getBannedCommands":
                 this.sendBannedCommands();
@@ -103,65 +85,7 @@ var require_settings_panel = __commonJS({
         this.dispose();
       }
       async handleCancelSubscription() {
-        const userId = this.getUserId();
-        vscode2.window.withProgress(
-          {
-            location: vscode2.ProgressLocation.Notification,
-            title: "Processing cancellation request...",
-            cancellable: false
-          },
-          async (progress) => {
-            try {
-              const https = require("https");
-              const postData = JSON.stringify({ userId });
-              const options = {
-                hostname: "auto-accept-backend.onrender.com",
-                path: "/api/cancel-subscription",
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Content-Length": Buffer.byteLength(postData)
-                }
-              };
-              const result = await new Promise((resolve, reject) => {
-                const req = https.request(options, (res) => {
-                  let data = "";
-                  res.on("data", (chunk) => data += chunk);
-                  res.on("end", () => {
-                    try {
-                      resolve({ statusCode: res.statusCode, data: JSON.parse(data) });
-                    } catch (e) {
-                      resolve({ statusCode: res.statusCode, data: {} });
-                    }
-                  });
-                });
-                req.on("error", reject);
-                req.write(postData);
-                req.end();
-              });
-              if (result.statusCode === 200) {
-                vscode2.window.showInformationMessage(
-                  "Subscription cancelled. You will retain Pro access until the end of your billing period.",
-                  "OK"
-                );
-              } else {
-                vscode2.window.showErrorMessage(
-                  "Failed to cancel subscription. Please contact support or manage your subscription via Stripe customer portal.",
-                  "Contact Support"
-                ).then((selection) => {
-                  if (selection === "Contact Support") {
-                    vscode2.env.openExternal(vscode2.Uri.parse("https://github.com/MunKhin/auto-accept-agent/issues"));
-                  }
-                });
-              }
-            } catch (error) {
-              vscode2.window.showErrorMessage(
-                "Network error. Please try again or contact support.",
-                "OK"
-              );
-            }
-          }
-        );
+        vscode2.window.showInformationMessage("No subscription active (Community Version)");
       }
       async handleCheckPro() {
         const isPro2 = await this.checkProStatus(this.getUserId());
@@ -176,7 +100,7 @@ var require_settings_panel = __commonJS({
         }
       }
       isPro() {
-        return this.context.globalState.get("auto-accept-isPro", false);
+        return true;
       }
       isPlanRecurring() {
         const plan = this.context.globalState.get("auto-accept-plan", "lifetime");
@@ -198,7 +122,7 @@ var require_settings_panel = __commonJS({
       }
       updateMode(mode) {
         this.mode = mode;
-        this.panel.title = mode === "prompt" ? "Auto Accept Agent" : "Auto Accept Settings";
+        this.panel.title = mode === "prompt" ? "Auto Pilot Agent" : "Auto Pilot Settings";
         this.update();
       }
       sendStats() {
@@ -207,8 +131,8 @@ var require_settings_panel = __commonJS({
           sessions: 0,
           lastSession: null
         });
-        const isPro2 = this.isPro();
-        const frequency = isPro2 ? this.context.globalState.get("auto-accept-frequency", 1e3) : 300;
+        const isPro2 = true;
+        const frequency = this.context.globalState.get("auto-accept-frequency", 1e3);
         this.panel.webview.postMessage({
           command: "updateStats",
           stats,
@@ -257,10 +181,6 @@ var require_settings_panel = __commonJS({
         const isPro2 = this.isPro();
         const isPrompt = this.mode === "prompt";
         const userId = this.getUserId();
-        const stripeLinks = {
-          MONTHLY: `${STRIPE_LINKS.MONTHLY}?client_reference_id=${userId}`,
-          YEARLY: `${STRIPE_LINKS.YEARLY}?client_reference_id=${userId}`
-        };
         const css = `
             :root {
                 --bg: #0a0a0c;
@@ -510,14 +430,9 @@ var require_settings_panel = __commonJS({
                         <div class="prompt-title">Workflow Paused</div>
                         <div class="prompt-text">
                             Your Antigravity agent is waiting for approval.<br/><br/>
-                            <strong style="color: var(--accent); opacity: 1;">Pro users auto-resume 94% of these interruptions.</strong>
+                            <strong style="color: var(--accent); opacity: 1;">Auto Pilot will auto-resume these interruptions.</strong>
                         </div>
-                        <a href="${stripeLinks.MONTHLY}" class="btn-primary" style="margin-bottom: 12px;">
-                            \u{1F680} Unlock Auto-Recovery \u2014 $5/mo
-                        </a>
-                        <a href="${stripeLinks.YEARLY}" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
-                            Annual Plan \u2014 $29/year
-                        </a>
+                        
 
                         <a class="link-secondary" onclick="dismiss()" style="margin-top: 24px; opacity: 0.6;">
                             Continue manually for now
@@ -539,27 +454,10 @@ var require_settings_panel = __commonJS({
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Auto Accept <span class="pro-badge">Pro</span></h1>
+                    <h1>Auto Pilot</h1>
                     <div class="subtitle">Multi-agent automation for Antigravity & Cursor</div>
                 </div>
 
-                ${!isPro2 ? `
-                <div class="section" style="background: var(--accent-soft); border-color: var(--accent); position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; font-size: 80px; opacity: 0.05; transform: rotate(15deg);">\u{1F680}</div>
-                    <div class="section-label" style="color: white; margin-bottom: 12px; font-size: 14px;">\u{1F525} Upgrade to Pro</div>
-                    <div style="font-size: 14px; line-height: 1.6; margin-bottom: 24px; color: rgba(255,255,255,0.9);">
-                        Automate up to 5 agents in parallel. Join 500+ devs saving hours every week.
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <a href="${stripeLinks.MONTHLY}" class="btn-primary">
-                            $5 / Month
-                        </a>
-                        <a href="${stripeLinks.YEARLY}" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
-                            $29 / Year
-                        </a>
-                    </div>
-                </div>
-                ` : ""}
 
                 <div class="section">
                     <div class="section-label">
@@ -591,14 +489,13 @@ var require_settings_panel = __commonJS({
                         <span>\u26A1 Performance Mode</span>
                         <span class="val-display" id="freqVal" style="color: var(--accent);">...</span>
                     </div>
-                    <div class="${!isPro2 ? "locked" : ""}">
+                    <div class="">
                         <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 12px; opacity: 0.5;">Instant</span>
                             <div style="flex: 1;"><input type="range" id="freqSlider" min="200" max="3000" step="100" value="1000"></div>
                             <span style="font-size: 12px; opacity: 0.5;">Battery Saving</span>
                         </div>
                     </div>
-                    ${!isPro2 ? '<div class="pro-tip">Locked: Pro users get 200ms ultra-low latency mode</div>' : ""}
                 </div>
 
                 <div class="section">
@@ -608,9 +505,9 @@ var require_settings_panel = __commonJS({
                     </div>
                     <textarea id="bannedCommandsInput" 
                         placeholder="rm -rf /&#10;format c:&#10;del /f /s /q"
-                        ${!isPro2 ? "readonly" : ""}></textarea>
+                        ></textarea>
                     
-                    <div class="${!isPro2 ? "locked" : ""}" style="display: flex; gap: 12px; margin-top: 20px;">
+                    <div class="" style="display: flex; gap: 12px; margin-top: 20px;">
                         <button id="saveBannedBtn" class="btn-primary" style="flex: 2;">
                             Update Rules
                         </button>
@@ -621,18 +518,6 @@ var require_settings_panel = __commonJS({
                     <div id="bannedStatus" style="font-size: 12px; margin-top: 12px; text-align: center; height: 18px;"></div>
                 </div>
 
-                ${isPro2 && this.isPlanRecurring() ? `
-                <div class="section">
-                    <div class="section-label">\u{1F4B3} SUBSCRIPTION</div>
-                    <div style="font-size: 13px; opacity: 0.6; margin-bottom: 16px; line-height: 1.5;">
-                        Manage your Auto Accept Pro subscription
-                    </div>
-                    <button id="cancelSubBtn" class="btn-danger">
-                        Cancel Subscription
-                    </button>
-                    <div id="cancelStatus" style="font-size: 12px; margin-top: 12px; text-align: center; height: 18px;"></div>
-                </div>
-                ` : ""}
 
                 <div style="text-align: center; opacity: 0.15; font-size: 10px; padding: 20px 0; letter-spacing: 1px;">
                     REF: ${userId}
@@ -722,7 +607,7 @@ var require_settings_panel = __commonJS({
                 window.addEventListener('message', e => {
                     const msg = e.data;
                     if (msg.command === 'updateStats') {
-                        if (slider && !${!isPro2}) {
+                        if (slider) {
                             slider.value = msg.frequency;
                             valDisplay.innerText = (msg.frequency/1000).toFixed(1) + 's';
                         }
@@ -760,44 +645,7 @@ var require_settings_panel = __commonJS({
         }
       }
       async checkProStatus(userId) {
-        return new Promise((resolve) => {
-          const https = require("https");
-          https.get(`${LICENSE_API2}/verify?userId=${userId}`, (res) => {
-            let data = "";
-            res.on("data", (chunk) => data += chunk);
-            res.on("end", () => {
-              try {
-                const json = JSON.parse(data);
-                if (json.plan) {
-                  this.context.globalState.update("auto-accept-plan", json.plan);
-                }
-                resolve(json.isPro === true);
-              } catch (e) {
-                resolve(false);
-              }
-            });
-          }).on("error", () => resolve(false));
-        });
-      }
-      startPolling(userId) {
-        let attempts = 0;
-        const maxAttempts = 60;
-        if (this.pollTimer) clearInterval(this.pollTimer);
-        this.pollTimer = setInterval(async () => {
-          attempts++;
-          if (attempts > maxAttempts) {
-            clearInterval(this.pollTimer);
-            return;
-          }
-          const isPro2 = await this.checkProStatus(userId);
-          if (isPro2) {
-            clearInterval(this.pollTimer);
-            await this.context.globalState.update("auto-accept-isPro", true);
-            vscode2.window.showInformationMessage("Auto Accept: Pro status verified! Thank you for your support.");
-            this.update();
-            vscode2.commands.executeCommand("auto-accept.updateFrequency", 1e3);
-          }
-        }, 5e3);
+        return true;
       }
     };
     module2.exports = { SettingsPanel: SettingsPanel2 };
@@ -5310,24 +5158,21 @@ function getSettingsPanel() {
   return SettingsPanel;
 }
 var GLOBAL_STATE_KEY = "auto-accept-enabled-global";
-var PRO_STATE_KEY = "auto-accept-isPro";
 var FREQ_STATE_KEY = "auto-accept-frequency";
 var BANNED_COMMANDS_KEY = "auto-accept-banned-commands";
 var ROI_STATS_KEY = "auto-accept-roi-stats";
 var SECONDS_PER_CLICK = 5;
-var LICENSE_API = "https://auto-accept-backend.onrender.com/api";
 var INSTANCE_ID = Math.random().toString(36).substring(7);
 var isEnabled = false;
-var isPro = false;
+var isPro = true;
 var isLockedOut = false;
-var pollFrequency = 2e3;
+var pollFrequency = 1e3;
 var bannedCommands = [];
 var backgroundModeEnabled = false;
 var BACKGROUND_DONT_SHOW_KEY = "auto-accept-background-dont-show";
 var BACKGROUND_MODE_KEY = "auto-accept-background-mode";
 var VERSION_7_0_KEY = "auto-accept-version-7.0-notification-shown";
 var VERSION_8_6_0_KEY = "auto-accept-version-8.6-notification-shown";
-var RELEASY_PROMO_KEY = "auto-accept-releasy-promo-shown";
 var pollTimer;
 var statsCollectionTimer;
 var statusBarItem;
@@ -5355,37 +5200,32 @@ function detectIDE() {
 }
 async function activate(context) {
   globalContext = context;
-  console.log("Auto Accept Extension: Activator called.");
+  console.log("Auto Pilot Extension: Activator called.");
   try {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = "auto-accept.toggle";
-    statusBarItem.text = "$(sync~spin) Auto Accept: Loading...";
-    statusBarItem.tooltip = "Auto Accept is initializing...";
+    statusBarItem.text = "$(sync~spin) Auto Pilot: Loading...";
+    statusBarItem.tooltip = "Auto Pilot is initializing...";
     context.subscriptions.push(statusBarItem);
     statusBarItem.show();
     statusSettingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98);
     statusSettingsItem.command = "auto-accept.openSettings";
     statusSettingsItem.text = "$(gear)";
-    statusSettingsItem.tooltip = "Auto Accept Settings & Pro Features";
+    statusSettingsItem.tooltip = "Auto Pilot Settings";
     context.subscriptions.push(statusSettingsItem);
     statusSettingsItem.show();
     statusBackgroundItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
     statusBackgroundItem.command = "auto-accept.toggleBackground";
     statusBackgroundItem.text = "$(globe) Background: OFF";
-    statusBackgroundItem.tooltip = "Background Mode (Pro) - Works on all chats";
+    statusBackgroundItem.tooltip = "Background Mode - Works on all chats";
     context.subscriptions.push(statusBackgroundItem);
-    console.log("Auto Accept: Status bar items created and shown.");
+    console.log("Auto Pilot: Status bar items created and shown.");
   } catch (sbError) {
     console.error("CRITICAL: Failed to create status bar items:", sbError);
   }
   try {
     isEnabled = context.globalState.get(GLOBAL_STATE_KEY, false);
-    isPro = context.globalState.get(PRO_STATE_KEY, false);
-    if (isPro) {
-      pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1e3);
-    } else {
-      pollFrequency = 300;
-    }
+    pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1e3);
     backgroundModeEnabled = context.globalState.get(BACKGROUND_MODE_KEY, false);
     const defaultBannedCommands = [
       "rm -rf /",
@@ -5402,27 +5242,11 @@ async function activate(context) {
       "chmod -R 777 /"
     ];
     bannedCommands = context.globalState.get(BANNED_COMMANDS_KEY, defaultBannedCommands);
-    verifyLicense(context).then((isValid) => {
-      if (isPro !== isValid) {
-        isPro = isValid;
-        context.globalState.update(PRO_STATE_KEY, isValid);
-        log(`License re-verification: Updated Pro status to ${isValid}`);
-        if (cdpHandler && cdpHandler.setProStatus) {
-          cdpHandler.setProStatus(isValid);
-        }
-        if (!isValid) {
-          pollFrequency = 300;
-          if (backgroundModeEnabled) {
-          }
-        }
-        updateStatusBar();
-      }
-    });
     currentIDE = detectIDE();
-    outputChannel = vscode.window.createOutputChannel("Auto Accept");
+    outputChannel = vscode.window.createOutputChannel("Auto Pilot");
     context.subscriptions.push(outputChannel);
-    log(`Auto Accept: Activating...`);
-    log(`Auto Accept: Detected environment: ${currentIDE.toUpperCase()}`);
+    log(`Auto Pilot: Activating...`);
+    log(`Auto Pilot: Detected environment: ${currentIDE.toUpperCase()}`);
     vscode.window.onDidChangeWindowState(async (e) => {
       if (cdpHandler && cdpHandler.setFocusState) {
         await cdpHandler.setFocusState(e.focused);
@@ -5468,32 +5292,19 @@ async function activate(context) {
         } else {
           vscode.window.showErrorMessage("Failed to load Settings Panel.");
         }
-      }),
-      vscode.commands.registerCommand("auto-accept.activatePro", () => handleProActivation(context))
+      })
     );
-    const uriHandler = {
-      handleUri(uri) {
-        log(`URI Handler received: ${uri.toString()}`);
-        if (uri.path === "/activate" || uri.path === "activate") {
-          log("Activation URI detected - verifying pro status...");
-          handleProActivation(context);
-        }
-      }
-    };
-    context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
-    log("URI Handler registered for activation deep links.");
     try {
       await checkEnvironmentAndStart();
     } catch (err) {
       log(`Error in environment check: ${err.message}`);
     }
     showVersionNotification(context);
-    showReleasyCrossPromo(context);
-    log("Auto Accept: Activation complete");
+    log("Auto Pilot: Activation complete");
   } catch (error) {
     console.error("ACTIVATION CRITICAL FAILURE:", error);
     log(`ACTIVATION CRITICAL FAILURE: ${error.message}`);
-    vscode.window.showErrorMessage(`Auto Accept Extension failed to activate: ${error.message}`);
+    vscode.window.showErrorMessage(`Auto Pilot Extension failed to activate: ${error.message}`);
   }
 }
 async function ensureCDPOrPrompt(showPrompt = false) {
@@ -5534,7 +5345,7 @@ async function handleToggle(context) {
   try {
     const cdpAvailable = cdpHandler ? await cdpHandler.isCDPAvailable() : false;
     if (!isEnabled && !cdpAvailable && relauncher) {
-      log("Auto Accept: CDP not available. Prompting for setup/relaunch.");
+      log("Auto Pilot: CDP not available. Prompting for setup/relaunch.");
       await relauncher.ensureCDPAndRelaunch();
       return;
     }
@@ -5545,12 +5356,12 @@ async function handleToggle(context) {
     log("  Calling updateStatusBar...");
     updateStatusBar();
     if (isEnabled) {
-      log("Auto Accept: Enabled");
+      log("Auto Pilot: Enabled");
       ensureCDPOrPrompt(true).then(() => startPolling());
       startStatsCollection(context);
       incrementSessionCount(context);
     } else {
-      log("Auto Accept: Disabled");
+      log("Auto Pilot: Disabled");
       if (cdpHandler) {
         cdpHandler.getSessionSummary().then((summary) => showSessionSummaryNotification(context, summary)).catch(() => {
         });
@@ -5583,10 +5394,6 @@ async function handleFrequencyUpdate(context, freq) {
   }
 }
 async function handleBannedCommandsUpdate(context, commands) {
-  if (!isPro) {
-    log("Banned commands customization requires Pro");
-    return;
-  }
   bannedCommands = Array.isArray(commands) ? commands : [];
   await context.globalState.update(BANNED_COMMANDS_KEY, bannedCommands);
   log(`Banned commands updated: ${bannedCommands.length} patterns`);
@@ -5599,22 +5406,10 @@ async function handleBannedCommandsUpdate(context, commands) {
 }
 async function handleBackgroundToggle(context) {
   log("Background toggle clicked");
-  if (!isPro) {
-    vscode.window.showInformationMessage(
-      "Background Mode is a Pro feature.",
-      "Learn More"
-    ).then((choice) => {
-      if (choice === "Learn More") {
-        const panel = getSettingsPanel();
-        if (panel) panel.createOrShow(context.extensionUri, context);
-      }
-    });
-    return;
-  }
   const dontShowAgain = context.globalState.get(BACKGROUND_DONT_SHOW_KEY, false);
   if (!dontShowAgain && !backgroundModeEnabled) {
     const choice = await vscode.window.showInformationMessage(
-      "Turn on Background Mode?\n\nThis lets Auto Accept work on all your open chats at once. It will switch between tabs to click Accept for you.\n\nYou might see tabs change quickly while it works.",
+      "Turn on Background Mode?\n\nThis lets Auto Pilot work on all your open chats at once. It will switch between tabs to click Accept for you.\n\nYou might see tabs change quickly while it works.",
       { modal: true },
       "Enable",
       "Don't Show Again & Enable",
@@ -5664,7 +5459,7 @@ async function syncSessions() {
 }
 async function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  log("Auto Accept: Monitoring session...");
+  log("Auto Pilot: Monitoring session...");
   await syncSessions();
   pollTimer = setInterval(async () => {
     if (!isEnabled) return;
@@ -5877,7 +5672,7 @@ function updateStatusBar() {
       bgColor = new vscode.ThemeColor("statusBarItem.warningBackground");
       icon = "$(sync~spin)";
     }
-    statusBarItem.text = `${icon} Auto Accept: ${statusText}`;
+    statusBarItem.text = `${icon} Auto Pilot: ${statusText}`;
     statusBarItem.tooltip = tooltip;
     statusBarItem.backgroundColor = bgColor;
     if (statusBackgroundItem) {
@@ -5893,131 +5688,13 @@ function updateStatusBar() {
       statusBackgroundItem.show();
     }
   } else {
-    statusBarItem.text = "$(circle-slash) Auto Accept: OFF";
-    statusBarItem.tooltip = "Click to enable Auto Accept.";
+    statusBarItem.text = "$(circle-slash) Auto Pilot: OFF";
+    statusBarItem.tooltip = "Click to enable Auto Pilot.";
     statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     if (statusBackgroundItem) {
       statusBackgroundItem.hide();
     }
   }
-}
-async function verifyLicense(context) {
-  const userId = context.globalState.get("auto-accept-userId");
-  if (!userId) return false;
-  return new Promise((resolve) => {
-    const https = require("https");
-    https.get(`${LICENSE_API}/check-license?userId=${userId}`, (res) => {
-      let data = "";
-      res.on("data", (chunk) => data += chunk);
-      res.on("end", () => {
-        try {
-          const json = JSON.parse(data);
-          resolve(json.isPro === true);
-        } catch (e) {
-          resolve(false);
-        }
-      });
-    }).on("error", () => resolve(false));
-  });
-}
-async function handleProActivation(context) {
-  log("Pro Activation: Starting verification process...");
-  vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: "Auto Accept: Verifying Pro status...",
-      cancellable: false
-    },
-    async (progress) => {
-      progress.report({ increment: 30 });
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      progress.report({ increment: 30 });
-      const isProNow = await verifyLicense(context);
-      progress.report({ increment: 40 });
-      if (isProNow) {
-        isPro = true;
-        await context.globalState.update(PRO_STATE_KEY, true);
-        if (cdpHandler && cdpHandler.setProStatus) {
-          cdpHandler.setProStatus(true);
-        }
-        pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1e3);
-        if (isEnabled) {
-          await syncSessions();
-        }
-        updateStatusBar();
-        log("Pro Activation: SUCCESS - User is now Pro!");
-        vscode.window.showInformationMessage(
-          "\u{1F389} Pro Activated! Thank you for your support. All Pro features are now unlocked.",
-          "Open Dashboard"
-        ).then((choice) => {
-          if (choice === "Open Dashboard") {
-            const panel = getSettingsPanel();
-            if (panel) panel.createOrShow(context.extensionUri, context);
-          }
-        });
-      } else {
-        log("Pro Activation: License not found yet. Starting background polling...");
-        startProPolling(context);
-      }
-    }
-  );
-}
-var proPollingTimer = null;
-var proPollingAttempts = 0;
-var MAX_PRO_POLLING_ATTEMPTS = 24;
-function startProPolling(context) {
-  if (proPollingTimer) {
-    clearInterval(proPollingTimer);
-  }
-  proPollingAttempts = 0;
-  log("Pro Polling: Starting background verification (checking every 5s for up to 2 minutes)...");
-  vscode.window.showInformationMessage(
-    "Payment received! Verifying your Pro status... This may take a moment."
-  );
-  proPollingTimer = setInterval(async () => {
-    proPollingAttempts++;
-    log(`Pro Polling: Attempt ${proPollingAttempts}/${MAX_PRO_POLLING_ATTEMPTS}`);
-    if (proPollingAttempts > MAX_PRO_POLLING_ATTEMPTS) {
-      clearInterval(proPollingTimer);
-      proPollingTimer = null;
-      log("Pro Polling: Max attempts reached. User should check manually.");
-      vscode.window.showWarningMessage(
-        'Pro verification is taking longer than expected. Please click "Check Pro Status" in settings, or contact support if the issue persists.',
-        "Open Settings"
-      ).then((choice) => {
-        if (choice === "Open Settings") {
-          const panel = getSettingsPanel();
-          if (panel) panel.createOrShow(context.extensionUri, context);
-        }
-      });
-      return;
-    }
-    const isProNow = await verifyLicense(context);
-    if (isProNow) {
-      clearInterval(proPollingTimer);
-      proPollingTimer = null;
-      isPro = true;
-      await context.globalState.update(PRO_STATE_KEY, true);
-      if (cdpHandler && cdpHandler.setProStatus) {
-        cdpHandler.setProStatus(true);
-      }
-      pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1e3);
-      if (isEnabled) {
-        await syncSessions();
-      }
-      updateStatusBar();
-      log("Pro Polling: SUCCESS - Pro status confirmed!");
-      vscode.window.showInformationMessage(
-        "\u{1F389} Pro Activated! Thank you for your support. All Pro features are now unlocked.",
-        "Open Dashboard"
-      ).then((choice) => {
-        if (choice === "Open Dashboard") {
-          const panel = getSettingsPanel();
-          if (panel) panel.createOrShow(context.extensionUri, context);
-        }
-      });
-    }
-  }, 5e3);
 }
 async function showVersionNotification(context) {
   const hasShown8_6 = context.globalState.get(VERSION_8_6_0_KEY, false);
@@ -6077,37 +5754,6 @@ ${body}`,
   if (selection === btnDashboard) {
     const panel = getSettingsPanel();
     if (panel) panel.createOrShow(context.extensionUri, context);
-  }
-}
-async function showReleasyCrossPromo(context) {
-  const hasShown = context.globalState.get(RELEASY_PROMO_KEY, false);
-  if (hasShown) return;
-  const stats = context.globalState.get(ROI_STATS_KEY, { sessionsThisWeek: 0 });
-  const totalSessions = stats.sessionsThisWeek || 0;
-  if (totalSessions < 3) return;
-  await context.globalState.update(RELEASY_PROMO_KEY, true);
-  const title = "\u{1F389} New from the Auto Accept team";
-  const body = `Releasy AI \u2014 Marketing for Developers
-
-Turn your GitHub commits into Reddit posts automatically.
-
-\u2022 AI analyzes your changes
-\u2022 Generates engaging posts
-\u2022 Auto-publishes to Reddit
-
-Zero effort marketing for your side projects.`;
-  const selection = await vscode.window.showInformationMessage(
-    `${title}
-
-${body}`,
-    { modal: true },
-    "Check it out",
-    "Maybe later"
-  );
-  if (selection === "Check it out") {
-    vscode.env.openExternal(
-      vscode.Uri.parse("https://releasyai.com?utm_source=auto-accept&utm_medium=extension&utm_campaign=version_promo")
-    );
   }
 }
 function deactivate() {

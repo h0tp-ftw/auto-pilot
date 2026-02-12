@@ -1,22 +1,20 @@
-# Auto Accept for Antigravity
+# Auto Pilot
 
 ## Run 3 AI agents in parallel. Zero babysitting.
 
-Stop watching tabs. Auto Accept keeps every Antigravity conversation moving — accepting file edits, terminal commands, and recovery prompts automatically.
+Stop watching tabs. Auto Pilot keeps every Antigravity conversation moving — accepting file edits, terminal commands, and recovery prompts automatically.
+
+> **Community fork** — all features unlocked, no paywalls, no subscriptions.
 
 ---
 
-![background mode](https://raw.githubusercontent.com/MunKhin/auto-accept-agent/master/media/background-mode.png)
+## Why Auto Pilot?
 
----
-
-## Why Auto Accept?
-
-Antigravity's multi-agent workflow is powerful, but it stops every time the agent needs approval. 
+Antigravity's multi-agent workflow is powerful, but it stops every time the agent needs approval.
 
 **That's dozens of interruptions per hour.**
 
-Auto Accept eliminates the wait:
+Auto Pilot eliminates the wait:
 - ✅ **File edits** — Auto-applied
 - ✅ **Terminal commands** — Auto-executed
 - ✅ **Retry prompts** — Auto-confirmed
@@ -26,20 +24,27 @@ Auto Accept eliminates the wait:
 
 ## Features
 
-### Background Mode (Pro)
+### Background Mode
 Run multiple Antigravity tabs simultaneously. Every conversation auto-accepts in the background — no tab-switching required.
 
 ### Dangerous Command Blocking
-Built-in protection against destructive commands like `rm -rf /`. Pro users can customize the blocklist.
+Built-in protection against destructive commands like `rm -rf /`. Customize the blocklist from settings.
 
 ### Real-time Status Overlay
 Visual indicators show conversation state:
 - **Purple** — In progress, actively polling
 - **Green** — Task completed
 
+### Adjustable Polling Speed
+Tune the polling interval from 200ms ultra-low latency to 3s battery-saving mode.
+
+### Multi-window Support
+Works across multiple IDE windows simultaneously.
+
 ### Works Everywhere
 - ✅ Antigravity
 - ✅ Cursor
+- ✅ VS Code
 - ✅ Multiple windows
 - ✅ Minimized/unfocused
 
@@ -51,29 +56,15 @@ Visual indicators show conversation state:
 2. **Enable CDP** when prompted (copy platform-specific script to clipboard)
 3. **Run the script** in your terminal/command prompt
 4. **Restart** your IDE completely
-5. **Done** — Auto Accept activates automatically
+5. **Done** — Auto Pilot activates automatically
 
-The extension runs silently. Check the status bar for `Auto Accept: ON`.
-
----
-
-## Pro Features
-
-| Feature | Free | Pro |
-|---------|------|-----|
-| Auto-accept in active tab | ✅ | ✅ |
-| Background mode (all tabs) | — | ✅ |
-| Custom banned commands | — | ✅ |
-| Adjustable polling speed | — | ✅ |
-| Stuck agent recovery | — | ✅ |
-| Multi-window support | — | ✅ |
-
+The extension runs silently. Check the status bar for `Auto Pilot: ON`.
 
 ---
 
 ## Requirements
 
-- Antigravity or Cursor IDE
+- Antigravity, Cursor, or VS Code
 - Enable remote debugging port (one-time setup via provided scripts)
 
 ---

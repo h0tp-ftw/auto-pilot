@@ -1,16 +1,16 @@
-# Auto Accept Agent Setup Guide
+# Auto Pilot Setup Guide
 
-This guide helps you enable Chrome DevTools Protocol (CDP) for Auto Accept Agent to work properly.
+This guide helps you enable Chrome DevTools Protocol (CDP) for Auto Pilot to work properly.
 
 ## Why is this needed?
 
-Auto Accept Agent needs CDP access to automatically click "Accept" buttons in your IDE. This requires launching your IDE with the `--remote-debugging-port=9000` flag.
+Auto Pilot needs CDP access to automatically click "Accept" buttons in your IDE. This requires launching your IDE with the `--remote-debugging-port=9000` flag.
 
 ## Setup Instructions by Platform
 
 ### Windows
 
-1. **Copy the setup script** from the Auto Accept setup panel
+1. **Copy the setup script** from the Auto Pilot setup panel
 2. **Open PowerShell as Administrator**
    - Press Windows key
    - Type "PowerShell"
@@ -26,7 +26,7 @@ The script will:
 
 ### macOS
 
-1. **Copy the setup script** from the Auto Accept setup panel
+1. **Copy the setup script** from the Auto Pilot setup panel
 2. **Open Terminal**
    - Press Cmd+Space
    - Type "Terminal"
@@ -41,7 +41,7 @@ The script will:
 
 ### Linux
 
-1. **Copy the setup script** from the Auto Accept setup panel
+1. **Copy the setup script** from the Auto Pilot setup panel
 2. **Open Terminal**
    - Press Ctrl+Alt+T or search for Terminal
 3. **Paste and run the script**
@@ -111,7 +111,7 @@ The CDP port is only accessible from localhost (127.0.0.1) by default, so it's s
 
 ## Still Need Help?
 
-- Check [GitHub Issues](https://github.com/MunKhin/auto-accept-agent/issues)
+- Check [GitHub Issues](https://github.com/h0tp-ftw/auto-pilot/issues)
 - Open a new issue with your platform and error details
 - Include the output from the setup script if possible
 

@@ -157,7 +157,7 @@
                     currentMode: null,
                     startTimes: {},
                     bannedCommands: [],
-                    isPro: false,
+                    isPro: true, // Community fork: always pro
                     stats: createDefaultStats()
                 };
                 log('[Analytics] State initialized');
@@ -927,7 +927,7 @@
     window.__autoAcceptStart = function (config) {
         try {
             const ide = (config.ide || 'cursor').toLowerCase();
-            const isPro = config.isPro !== false;
+            const isPro = true; // Community fork: always pro
             const isBG = config.isBackgroundMode === true;
 
             // Update banned commands from config
@@ -964,15 +964,10 @@
 
             log(`Agent Loaded (IDE: ${ide}, BG: ${isBG}, isPro: ${isPro})`, true);
 
-            if (isBG && isPro) {
+            if (isBG) {
                 log(`[BG] Creating overlay and starting loop...`);
                 showOverlay();
                 log(`[BG] Overlay created, starting ${ide} loop...`);
-                if (ide === 'cursor') cursorLoop(sid);
-                else antigravityLoop(sid);
-            } else if (isBG && !isPro) {
-                log(`[BG] Background mode requires Pro, showing overlay anyway...`);
-                showOverlay();
                 if (ide === 'cursor') cursorLoop(sid);
                 else antigravityLoop(sid);
             } else {

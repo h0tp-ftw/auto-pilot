@@ -17,21 +17,19 @@ function getSettingsPanel() {
 // states
 
 const GLOBAL_STATE_KEY = 'auto-accept-enabled-global';
-const PRO_STATE_KEY = 'auto-accept-isPro';
 const FREQ_STATE_KEY = 'auto-accept-frequency';
 const BANNED_COMMANDS_KEY = 'auto-accept-banned-commands';
 const ROI_STATS_KEY = 'auto-accept-roi-stats'; // For ROI notification
 const SECONDS_PER_CLICK = 5; // Conservative estimate: 5 seconds saved per auto-accept
-const LICENSE_API = 'https://auto-accept-backend.onrender.com/api';
 // Locking
 const LOCK_KEY = 'auto-accept-instance-lock';
 const HEARTBEAT_KEY = 'auto-accept-instance-heartbeat';
 const INSTANCE_ID = Math.random().toString(36).substring(7);
 
 let isEnabled = false;
-let isPro = false;
+const isPro = true; // Community fork: all features unlocked
 let isLockedOut = false; // Local tracking
-let pollFrequency = 2000; // Default for Free
+let pollFrequency = 1000; // Default pro speed
 let bannedCommands = []; // List of command patterns to block
 
 // Background Mode state
@@ -74,21 +72,21 @@ function detectIDE() {
 
 async function activate(context) {
     globalContext = context;
-    console.log('Auto Accept Extension: Activator called.');
+    console.log('Auto Pilot Extension: Activator called.');
 
     // CRITICAL: Create status bar items FIRST before anything else
     try {
         statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         statusBarItem.command = 'auto-accept.toggle';
-        statusBarItem.text = '$(sync~spin) Auto Accept: Loading...';
-        statusBarItem.tooltip = 'Auto Accept is initializing...';
+        statusBarItem.text = '$(sync~spin) Auto Pilot: Loading...';
+        statusBarItem.tooltip = 'Auto Pilot is initializing...';
         context.subscriptions.push(statusBarItem);
         statusBarItem.show();
 
         statusSettingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98);
         statusSettingsItem.command = 'auto-accept.openSettings';
         statusSettingsItem.text = '$(gear)';
-        statusSettingsItem.tooltip = 'Auto Accept Settings & Pro Features';
+        statusSettingsItem.tooltip = 'Auto Pilot Settings';
         context.subscriptions.push(statusSettingsItem);
         statusSettingsItem.show();
 
@@ -96,11 +94,11 @@ async function activate(context) {
         statusBackgroundItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
         statusBackgroundItem.command = 'auto-accept.toggleBackground';
         statusBackgroundItem.text = '$(globe) Background: OFF';
-        statusBackgroundItem.tooltip = 'Background Mode (Pro) - Works on all chats';
+        statusBackgroundItem.tooltip = 'Background Mode - Works on all chats';
         context.subscriptions.push(statusBackgroundItem);
         // Don't show by default - only when Auto Accept is ON
 
-        console.log('Auto Accept: Status bar items created and shown.');
+        console.log('Auto Pilot: Status bar items created and shown.');
     } catch (sbError) {
         console.error('CRITICAL: Failed to create status bar items:', sbError);
     }
@@ -108,14 +106,9 @@ async function activate(context) {
     try {
         // 1. Initialize State
         isEnabled = context.globalState.get(GLOBAL_STATE_KEY, false);
-        isPro = context.globalState.get(PRO_STATE_KEY, false);
 
-        // Load frequency
-        if (isPro) {
-            pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1000);
-        } else {
-            pollFrequency = 300; // Enforce fast polling (0.3s) for free users
-        }
+        // Load frequency (all features unlocked)
+        pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1000);
 
         // Load background mode state
         backgroundModeEnabled = context.globalState.get(BACKGROUND_MODE_KEY, false);
@@ -137,36 +130,16 @@ async function activate(context) {
         bannedCommands = context.globalState.get(BANNED_COMMANDS_KEY, defaultBannedCommands);
 
 
-        // 1.5 Verify License Background Check
-        verifyLicense(context).then(isValid => {
-            if (isPro !== isValid) {
-                isPro = isValid;
-                context.globalState.update(PRO_STATE_KEY, isValid);
-                log(`License re-verification: Updated Pro status to ${isValid}`);
-
-                if (cdpHandler && cdpHandler.setProStatus) {
-                    cdpHandler.setProStatus(isValid);
-                }
-
-                if (!isValid) {
-                    pollFrequency = 300; // Downgrade speed
-                    if (backgroundModeEnabled) {
-                        // Optional: Disable background mode visual toggle if desired, 
-                        // but logic gate handles it.
-                    }
-                }
-                updateStatusBar();
-            }
-        });
+        // License verification removed — community fork, all features unlocked
 
         currentIDE = detectIDE();
 
         // 2. Create Output Channel
-        outputChannel = vscode.window.createOutputChannel('Auto Accept');
+        outputChannel = vscode.window.createOutputChannel('Auto Pilot');
         context.subscriptions.push(outputChannel);
 
-        log(`Auto Accept: Activating...`);
-        log(`Auto Accept: Detected environment: ${currentIDE.toUpperCase()}`);
+        log(`Auto Pilot: Activating...`);
+        log(`Auto Pilot: Detected environment: ${currentIDE.toUpperCase()}`);
 
         // Setup Focus Listener - Push state to browser (authoritative source)
         vscode.window.onDidChangeWindowState(async (e) => {
@@ -227,22 +200,10 @@ async function activate(context) {
                 } else {
                     vscode.window.showErrorMessage('Failed to load Settings Panel.');
                 }
-            }),
-            vscode.commands.registerCommand('auto-accept.activatePro', () => handleProActivation(context))
+            })
         );
 
-        // 6. Register URI Handler for deep links (e.g., from Stripe success page)
-        const uriHandler = {
-            handleUri(uri) {
-                log(`URI Handler received: ${uri.toString()}`);
-                if (uri.path === '/activate' || uri.path === 'activate') {
-                    log('Activation URI detected - verifying pro status...');
-                    handleProActivation(context);
-                }
-            }
-        };
-        context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
-        log('URI Handler registered for activation deep links.');
+        // URI handler not needed — no payment activation flow
 
         // 7. Check environment and start if enabled
         try {
@@ -254,14 +215,13 @@ async function activate(context) {
         // 8. Show Version 5.0 Notification (Once)
         showVersionNotification(context);
 
-        // 9. Show Releasy AI Cross-Promo (Once, after first session)
-        showReleasyCrossPromo(context);
+        // Cross-promo removed — community fork
 
-        log('Auto Accept: Activation complete');
+        log('Auto Pilot: Activation complete');
     } catch (error) {
         console.error('ACTIVATION CRITICAL FAILURE:', error);
         log(`ACTIVATION CRITICAL FAILURE: ${error.message}`);
-        vscode.window.showErrorMessage(`Auto Accept Extension failed to activate: ${error.message}`);
+        vscode.window.showErrorMessage(`Auto Pilot Extension failed to activate: ${error.message}`);
     }
 }
 
@@ -314,7 +274,7 @@ async function handleToggle(context) {
 
         // If trying to enable but CDP not available, prompt for relaunch (don't change state)
         if (!isEnabled && !cdpAvailable && relauncher) {
-            log('Auto Accept: CDP not available. Prompting for setup/relaunch.');
+            log('Auto Pilot: CDP not available. Prompting for setup/relaunch.');
             await relauncher.ensureCDPAndRelaunch();
             return; // Don't change state - toggle stays OFF
         }
@@ -331,13 +291,13 @@ async function handleToggle(context) {
 
         // Do CDP operations in background (don't block toggle)
         if (isEnabled) {
-            log('Auto Accept: Enabled');
+            log('Auto Pilot: Enabled');
             // These operations happen in background
             ensureCDPOrPrompt(true).then(() => startPolling());
             startStatsCollection(context);
             incrementSessionCount(context);
         } else {
-            log('Auto Accept: Disabled');
+            log('Auto Pilot: Disabled');
 
             // Fire-and-forget: Show session summary notification (non-blocking)
             if (cdpHandler) {
@@ -378,11 +338,6 @@ async function handleFrequencyUpdate(context, freq) {
 }
 
 async function handleBannedCommandsUpdate(context, commands) {
-    // Only Pro users can customize the banned list
-    if (!isPro) {
-        log('Banned commands customization requires Pro');
-        return;
-    }
     bannedCommands = Array.isArray(commands) ? commands : [];
     await context.globalState.update(BANNED_COMMANDS_KEY, bannedCommands);
     log(`Banned commands updated: ${bannedCommands.length} patterns`);
@@ -397,29 +352,14 @@ async function handleBannedCommandsUpdate(context, commands) {
 async function handleBackgroundToggle(context) {
     log('Background toggle clicked');
 
-    // Free tier: Show Pro message
-
-    if (!isPro) {
-        vscode.window.showInformationMessage(
-            'Background Mode is a Pro feature.',
-            'Learn More'
-        ).then(choice => {
-            if (choice === 'Learn More') {
-                const panel = getSettingsPanel();
-                if (panel) panel.createOrShow(context.extensionUri, context);
-            }
-        });
-        return;
-    }
-
-    // Pro tier: Check if we should show first-time dialog
+    // Background mode: Check if we should show first-time dialog
     const dontShowAgain = context.globalState.get(BACKGROUND_DONT_SHOW_KEY, false);
 
     if (!dontShowAgain && !backgroundModeEnabled) {
         // First-time enabling: Show confirmation dialog
         const choice = await vscode.window.showInformationMessage(
             'Turn on Background Mode?\n\n' +
-            'This lets Auto Accept work on all your open chats at once. ' +
+            'This lets Auto Pilot work on all your open chats at once. ' +
             'It will switch between tabs to click Accept for you.\n\n' +
             'You might see tabs change quickly while it works.',
             { modal: true },
@@ -484,7 +424,7 @@ async function syncSessions() {
 
 async function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
-    log('Auto Accept: Monitoring session...');
+    log('Auto Pilot: Monitoring session...');
 
     // Initial trigger
     await syncSessions();
@@ -672,32 +612,9 @@ async function showAwayActionsNotification(context, actionsCount) {
     });
 }
 
-// --- BACKGROUND MODE UPSELL ---
-// Called when free user switches tabs (could have been auto-handled)
+// Background upsell removed — community fork, all features unlocked
 async function showBackgroundModeUpsell(context) {
-    if (isPro) return; // Already Pro, no upsell
-
-    const UPSELL_COOLDOWN_KEY = 'auto-accept-bg-upsell-last';
-    const UPSELL_COOLDOWN_MS = 1000 * 60 * 30; // 30 minutes between upsells
-
-    const lastUpsell = context.globalState.get(UPSELL_COOLDOWN_KEY, 0);
-    const now = Date.now();
-
-    if (now - lastUpsell < UPSELL_COOLDOWN_MS) return; // Too soon
-
-    await context.globalState.update(UPSELL_COOLDOWN_KEY, now);
-
-    const choice = await vscode.window.showInformationMessage(
-        `💡 Auto Accept could've handled this tab switch automatically.`,
-        { detail: 'Enable Background Mode to keep all your agents moving in parallel—no manual tab switching needed.' },
-        'Enable Background Mode',
-        'Not Now'
-    );
-
-    if (choice === 'Enable Background Mode') {
-        const panel = getSettingsPanel();
-        if (panel) panel.createOrShow(context.extensionUri, context);
-    }
+    return; // No-op: all features free
 }
 
 // --- AWAY MODE POLLING ---
@@ -788,7 +705,7 @@ function updateStatusBar() {
             icon = '$(sync~spin)';
         }
 
-        statusBarItem.text = `${icon} Auto Accept: ${statusText}`;
+        statusBarItem.text = `${icon} Auto Pilot: ${statusText}`;
         statusBarItem.tooltip = tooltip;
         statusBarItem.backgroundColor = bgColor;
 
@@ -807,8 +724,8 @@ function updateStatusBar() {
         }
 
     } else {
-        statusBarItem.text = '$(circle-slash) Auto Accept: OFF';
-        statusBarItem.tooltip = 'Click to enable Auto Accept.';
+        statusBarItem.text = '$(circle-slash) Auto Pilot: OFF';
+        statusBarItem.tooltip = 'Click to enable Auto Pilot.';
         statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 
         // Hide Background Mode toggle when Auto Accept is OFF
@@ -820,7 +737,6 @@ function updateStatusBar() {
 
 // Re-implement checkInstanceLock correctly with context
 async function checkInstanceLock() {
-    if (isPro) return true;
     if (!globalContext) return true; // Should not happen
 
     const lockId = globalContext.globalState.get(LOCK_KEY);
@@ -844,160 +760,9 @@ async function checkInstanceLock() {
     return false;
 }
 
-async function verifyLicense(context) {
-    const userId = context.globalState.get('auto-accept-userId');
-    if (!userId) return false;
+// verifyLicense removed — community fork, no license server
 
-    return new Promise((resolve) => {
-        const https = require('https');
-        https.get(`${LICENSE_API}/check-license?userId=${userId}`, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(data);
-                    resolve(json.isPro === true);
-                } catch (e) {
-                    resolve(false);
-                }
-            });
-        }).on('error', () => resolve(false));
-    });
-}
-
-// Handle Pro activation (called from URI handler or command)
-async function handleProActivation(context) {
-    log('Pro Activation: Starting verification process...');
-
-    // Show progress notification
-    vscode.window.withProgress(
-        {
-            location: vscode.ProgressLocation.Notification,
-            title: 'Auto Accept: Verifying Pro status...',
-            cancellable: false
-        },
-        async (progress) => {
-            progress.report({ increment: 30 });
-
-            // Give webhook a moment to process (Stripe webhooks can have slight delay)
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            progress.report({ increment: 30 });
-
-            // Verify license
-            const isProNow = await verifyLicense(context);
-            progress.report({ increment: 40 });
-
-            if (isProNow) {
-                // Update state
-                isPro = true;
-                await context.globalState.update(PRO_STATE_KEY, true);
-
-                // Update CDP handler if running
-                if (cdpHandler && cdpHandler.setProStatus) {
-                    cdpHandler.setProStatus(true);
-                }
-
-                // Update poll frequency to pro default
-                pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1000);
-
-                // Sync sessions with new pro status
-                if (isEnabled) {
-                    await syncSessions();
-                }
-
-                // Update UI
-                updateStatusBar();
-
-                log('Pro Activation: SUCCESS - User is now Pro!');
-                vscode.window.showInformationMessage(
-                    '🎉 Pro Activated! Thank you for your support. All Pro features are now unlocked.',
-                    'Open Dashboard'
-                ).then(choice => {
-                    if (choice === 'Open Dashboard') {
-                        const panel = getSettingsPanel();
-                        if (panel) panel.createOrShow(context.extensionUri, context);
-                    }
-                });
-            } else {
-                log('Pro Activation: License not found yet. Starting background polling...');
-                // Start background polling in case webhook is delayed
-                startProPolling(context);
-            }
-        }
-    );
-}
-
-// Background polling for delayed webhook scenarios
-let proPollingTimer = null;
-let proPollingAttempts = 0;
-const MAX_PRO_POLLING_ATTEMPTS = 24; // 2 minutes (5s intervals)
-
-function startProPolling(context) {
-    if (proPollingTimer) {
-        clearInterval(proPollingTimer);
-    }
-
-    proPollingAttempts = 0;
-    log('Pro Polling: Starting background verification (checking every 5s for up to 2 minutes)...');
-
-    vscode.window.showInformationMessage(
-        'Payment received! Verifying your Pro status... This may take a moment.'
-    );
-
-    proPollingTimer = setInterval(async () => {
-        proPollingAttempts++;
-        log(`Pro Polling: Attempt ${proPollingAttempts}/${MAX_PRO_POLLING_ATTEMPTS}`);
-
-        if (proPollingAttempts > MAX_PRO_POLLING_ATTEMPTS) {
-            clearInterval(proPollingTimer);
-            proPollingTimer = null;
-            log('Pro Polling: Max attempts reached. User should check manually.');
-            vscode.window.showWarningMessage(
-                'Pro verification is taking longer than expected. Please click "Check Pro Status" in settings, or contact support if the issue persists.',
-                'Open Settings'
-            ).then(choice => {
-                if (choice === 'Open Settings') {
-                    const panel = getSettingsPanel();
-                    if (panel) panel.createOrShow(context.extensionUri, context);
-                }
-            });
-            return;
-        }
-
-        const isProNow = await verifyLicense(context);
-        if (isProNow) {
-            clearInterval(proPollingTimer);
-            proPollingTimer = null;
-
-            // Update state
-            isPro = true;
-            await context.globalState.update(PRO_STATE_KEY, true);
-
-            if (cdpHandler && cdpHandler.setProStatus) {
-                cdpHandler.setProStatus(true);
-            }
-
-            pollFrequency = context.globalState.get(FREQ_STATE_KEY, 1000);
-
-            if (isEnabled) {
-                await syncSessions();
-            }
-
-            updateStatusBar();
-
-            log('Pro Polling: SUCCESS - Pro status confirmed!');
-            vscode.window.showInformationMessage(
-                '🎉 Pro Activated! Thank you for your support. All Pro features are now unlocked.',
-                'Open Dashboard'
-            ).then(choice => {
-                if (choice === 'Open Dashboard') {
-                    const panel = getSettingsPanel();
-                    if (panel) panel.createOrShow(context.extensionUri, context);
-                }
-            });
-        }
-    }, 5000);
-}
+// handleProActivation removed — community fork
 
 async function showVersionNotification(context) {
     // Check if 8.6.0 notification has been shown
@@ -1070,42 +835,6 @@ async function showVersionNotification(context) {
     }
 }
 
-async function showReleasyCrossPromo(context) {
-    const hasShown = context.globalState.get(RELEASY_PROMO_KEY, false);
-    if (hasShown) return;
-
-    // Only show to returning users (after at least 3 sessions)
-    const stats = context.globalState.get(ROI_STATS_KEY, { sessionsThisWeek: 0 });
-    const totalSessions = stats.sessionsThisWeek || 0;
-    if (totalSessions < 3) return;
-
-    // Mark as shown immediately to prevent multiple showings
-    await context.globalState.update(RELEASY_PROMO_KEY, true);
-
-    const title = "🎉 New from the Auto Accept team";
-    const body = `Releasy AI — Marketing for Developers
-
-Turn your GitHub commits into Reddit posts automatically.
-
-• AI analyzes your changes
-• Generates engaging posts
-• Auto-publishes to Reddit
-
-Zero effort marketing for your side projects.`;
-
-    const selection = await vscode.window.showInformationMessage(
-        `${title}\n\n${body}`,
-        { modal: true },
-        "Check it out",
-        "Maybe later"
-    );
-
-    if (selection === "Check it out") {
-        vscode.env.openExternal(
-            vscode.Uri.parse('https://releasyai.com?utm_source=auto-accept&utm_medium=extension&utm_campaign=version_promo')
-        );
-    }
-}
 
 function deactivate() {
     stopPolling();
