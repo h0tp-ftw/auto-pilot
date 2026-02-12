@@ -1,4 +1,5 @@
-# Auto Pilot
+# ✈️ Auto Pilot
+
 
 [![Version](https://img.shields.io/open-vsx/v/h0tp-ftw/auto-pilot)](https://open-vsx.org/extension/h0tp-ftw/auto-pilot)
 [![Installs](https://img.shields.io/open-vsx/dt/h0tp-ftw/auto-pilot)](https://open-vsx.org/extension/h0tp-ftw/auto-pilot)
@@ -14,7 +15,8 @@ Stop watching tabs. Auto Pilot keeps every Antigravity conversation moving — a
 
 ---
 
-## Why Auto Pilot?
+## 🚀 Why Auto Pilot?
+
 
 Antigravity's multi-agent workflow is powerful, but it stops every time the agent needs approval.
 
@@ -28,26 +30,33 @@ Auto Pilot eliminates the wait:
 
 ---
 
-## Features
+## ✨ Features
 
-### Background Mode
+
+### 🕵️‍♂️ Background Mode
+
 Run multiple Antigravity tabs simultaneously. Every conversation auto-accepts in the background — no tab-switching required.
 
-### Dangerous Command Blocking
+### 🛡️ Dangerous Command Blocking
+
 Built-in protection against destructive commands like `rm -rf /`. Customize the blocklist from settings.
 
-### Real-time Status Overlay
+### 🚥 Real-time Status Overlay
+
 Visual indicators show conversation state:
 - **Purple** — In progress, actively polling
 - **Green** — Task completed
 
-### Adjustable Polling Speed
+### ⚡ Adjustable Polling Speed
+
 Tune the polling interval from 200ms ultra-low latency to 3s battery-saving mode.
 
-### Multi-window Support
+### 🖥️ Multi-window Support
+
 Works across multiple IDE windows simultaneously.
 
-### Works Everywhere
+### 🌐 Works Everywhere
+
 - ✅ Antigravity
 - ✅ Cursor
 - ✅ VS Code
@@ -56,7 +65,8 @@ Works across multiple IDE windows simultaneously.
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
+
 
 1. **Install** the extension
 2. **Enable CDP** when prompted (copy platform-specific script to clipboard)
@@ -68,23 +78,33 @@ The extension runs silently. Check the status bar for `Auto Pilot: ON`.
 
 ---
 
-## Requirements
+## 📋 Requirements
+
 
 - Antigravity, Cursor, or VS Code
 - Enable remote debugging port (one-time setup via provided scripts)
 
 ---
 
-## License
+## ⚖️ License
+
 
 MIT
 
 ---
 
-## Support the Project
+## ⭐ Support the Project
+
 
 If you find **Auto Pilot** helpful, please **star the repository** and share it with your friends! It helps more developers discover the tool.
 
 [![Star on GitHub](https://img.shields.io/github/stars/h0tp-ftw/auto-pilot?style=social)](https://github.com/h0tp-ftw/auto-pilot)
 
 **[Give it a ⭐ on GitHub](https://github.com/h0tp-ftw/auto-pilot)**
+
+---
+
+## 👏 Credits
+
+
+Special thanks to the original author, **@Munkhin** / **@altmunch** (GitHub), for building the foundation of this tool. This community fork builds upon their excellent work to provide a free and open-source alternative for everyone.
